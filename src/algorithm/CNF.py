@@ -2,66 +2,75 @@ from utils.helper import getNeighbors, paddingMatrix, subsets_of, to_1D
 
 
 def generateExactTrapsClauses(cells, k):
-    at_most_clauses = []
+    """
+    Generate CNF clauses to represent exactly k traps within the given cells.
+
+    Args:
+        cells (List[int]): List of cell IDs.
+        k (int): Number of traps.
+
+    Returns:
+        List[List[int]]: CNF clauses.
+    """
+    clauses = []
+
+    # At most k traps: For every subset of size k+1,
+    # at least one cell must not be a trap.
     if k < len(cells):
-        subsets = subsets_of(cells, k + 1)
+        for subset in subsets_of(cells, k + 1):
+            clauses.append([-x for x in subset])
 
-        # Đối với mỗi tập con có k + 1 phần tử, tạo mệnh đề "it nhất một ô không phải bẫy".
-        for subset in subsets:
-            at_most_clauses.append(
-                [-x for x in subset]
-            )  # Phủ định để biểu diễn "không phải bẫy".
-
-    # "Có ít nhất k ô bẫy trong n ô" <=> "Với mỗi n - k + 1 ô, có ít nhất một ô là bẫy".
-    at_least_clauses = []
+    # At least k traps: For every subset of size n-k+1,
+    # at least one cell must be a trap.
     if k > 0:
         n = len(cells)
-        subsets = subsets_of(cells, n - k + 1)
+        for subset in subsets_of(cells, n - k + 1):
+            clauses.append(subset)
 
-        # Mệnh đề "ít nhất một ô là bẫy" không cần phủ định.
-        at_least_clauses = subsets
-
-    return at_most_clauses + at_least_clauses
+    return clauses
 
 
 def getCNFClause(matrix):
-    # Kiểm tra ma trận đầu vào
+    """
+    Generate CNF clauses from the input matrix.
+
+    Args:
+        matrix (List[List[Union[int, str, None]]]): The game map.
+
+    Returns:
+        List[List[int]]: CNF clauses.
+    """
     if not matrix or not matrix[0]:
         return []
 
     padded_matrix = paddingMatrix(matrix)
     clauses = []
-    n_rows = len(padded_matrix)
-    n_cols = len(padded_matrix[0])
+    n_rows, n_cols = len(padded_matrix), len(padded_matrix[0])
     original_cols = len(matrix[0])
 
     for i in range(1, n_rows - 1):
         for j in range(1, n_cols - 1):
-            cell_value = padded_matrix[i][j]
+            value = padded_matrix[i][j]
 
-            if isinstance(cell_value, int):
-
-                traps = getNeighbors(padded_matrix, [i, j], lambda x: x == "T")
-
-                remaining_traps = cell_value - len(traps)
-
+            # Only generate clauses for number cells
+            if isinstance(value, int):
+                known_traps = getNeighbors(padded_matrix, [i, j], lambda x: x == "T")
                 unknown_cells = getNeighbors(padded_matrix, [i, j], lambda x: x is None)
 
+                remaining_traps = value - len(known_traps)
+
                 unknown_ids = [
-                    to_1D((position[0] - 1, position[1] - 1), original_cols)
-                    for position in unknown_cells
+                    to_1D((x - 1, y - 1), original_cols) for x, y in unknown_cells
                 ]
 
                 if unknown_ids:
-                    cnf_clauses = generateExactTrapsClauses(
-                        unknown_ids, remaining_traps
+                    clauses.extend(
+                        generateExactTrapsClauses(unknown_ids, remaining_traps)
                     )
-                    clauses.extend(cnf_clauses)
 
+    # Remove duplicates and sort clauses
     unique_clauses = set(tuple(clause) for clause in clauses)
     sorted_clauses = [list(clause) for clause in unique_clauses]
-
-    # Sắp xếp theo độ dài mệnh đề (ngắn trước) và giá trị
     sorted_clauses.sort(key=lambda x: (len(x), x))
 
     return sorted_clauses

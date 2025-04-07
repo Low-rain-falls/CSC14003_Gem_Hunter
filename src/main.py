@@ -7,7 +7,6 @@ from utils.filehandle import (inputMatrix, outputCNFs, outputMatrix,
                               printTwoMatrixes)
 from utils.helper import hashModel, updateMatrix
 
-# Get the project root directory
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 _ALGORITHM = {
@@ -37,14 +36,14 @@ def readArgs(argv):
     testcase = argv[2]
 
     if algorithm not in _ALGORITHM:
-        print(f"Algorithm {algorithm} not found")
-        print(f"Available: {algorithms}")
-        return None, None, None
+        print(f"Algorithm '{algorithm}' not found")
+        print(f"Available algorithms: {algorithms}")
+        return None, None
 
     if testcase not in _TEST_CASES:
-        print(f"Test case {testcase} not found")
-        print(f"Available: {testcases}")
-        return None, None, None
+        print(f"Test case '{testcase}' not found")
+        print(f"Available test cases: {testcases}")
+        return None, None
 
     return algorithm, testcase
 
@@ -54,7 +53,10 @@ def implement(argv, print_matrix=True):
     if testcase is None or algorithm is None:
         return
 
-    # Đọc file input và output.
+    print("\n" + "=" * 50)
+    print(f"{'GEM HUNTER - AI LAB':^50}")
+    print("=" * 50)
+
     input_file = os.path.join(_TEST_CASES[testcase], "input.txt")
     output_file = os.path.join(_TEST_CASES[testcase], "output.txt")
     output_CNFs_file = os.path.join(_TEST_CASES[testcase], "CNFs.txt")
@@ -62,11 +64,9 @@ def implement(argv, print_matrix=True):
     matrix = inputMatrix(input_file)
     original_matrix = [row.copy() for row in matrix]
 
-    # Giải bài toán.
     model, logging_info, CNFs, elapsed_time = solveGemHunter(matrix, algorithm)
     solution = updateMatrix(matrix, model)
 
-    # Xuất kết quả.
     if CNFs is not None:
         outputCNFs(CNFs, output_CNFs_file)
 
@@ -75,20 +75,28 @@ def implement(argv, print_matrix=True):
     else:
         outputMatrix([[""]], output_file)
 
-    # In input và output ra console
-    print(f"\n{printTwoMatrixes(original_matrix, solution)}") if print_matrix else None
+    if print_matrix:
+        print("\nInput vs Output Matrix:")
+        print("-" * 50)
+        print(printTwoMatrixes(original_matrix, solution))
+        print("-" * 50)
 
-    # In thông tin ra console
-    print(
-        f"Test {testcase.lower()}: {logging_info['CNFs']} CNFs - {logging_info['empties']} empty cells"
-    )
+    print(f"{'Test case':15}: {testcase}")
+    print(f"{'Algorithm':15}: {algorithm.upper()}")
+    print(f"{'Total CNFs':15}: {logging_info['CNFs']}")
+    print(f"{'Empty cells':15}: {logging_info['empties']}")
+
     if model is None:
-        print("No solution found!.")
+        print(f"{'Result':15}: No solution found!")
     else:
-        print(
-            f"Result hash: #{hashModel(model)} - {len([x for x in model if x > 0])} traps."
-        )
-    print(f"Algorithm: {algorithm.upper()} - {elapsed_time:.4f} ms. Terminating...")
+        num_traps = len([x for x in model if x > 0])
+        print(f"{'Result hash':15}: #{hashModel(model)}")
+        print(f"{'Total traps':15}: {num_traps}")
+
+    print(f"{'Elapsed time':15}: {elapsed_time:.4f} ms")
+
+    print("=" * 50)
+    print("Terminating...")
 
     return testcase, algorithm, elapsed_time, logging_info, model
 

@@ -1,40 +1,43 @@
 import os
 
 
-def inputMatrix(filename="./testcases/input.txt"):
-
+def readFileLines(filename):
+    """Reads all lines from a file and returns them as a list."""
     abs_path = os.path.abspath(filename)
 
     if not os.path.exists(abs_path):
         raise FileNotFoundError(f"Input file not found: {abs_path}")
 
     with open(filename, "r") as reader:
-        lines = reader.readlines()
-
-        matrix = []
-        for line in lines:
-            row = []
-            for cell in line.split(","):
-                cell = cell.strip()
-                if cell == "_":
-                    row.append(None)
-                elif cell == "T":
-                    row.append("T")
-                elif cell == "G":
-                    row.append("G")
-                elif cell.isnumeric():
-                    cell = int(cell)
-                    if cell < 1 or cell > 8:
-                        raise ValueError("Out of range(1-8)!.")
-                    row.append(int(cell))
-                else:
-                    raise ValueError("Invalid input")
-            matrix.append(row)
-        return matrix
+        return reader.readlines()
 
 
-def outputMatrix(matrix, filename="./testcases/output.txt"):
+def parseCell(cell):
+    """Parse a single cell value from the input file."""
+    if cell == "_":
+        return None
+    elif cell == "T" or cell == "G":
+        return cell
+    elif cell.isnumeric():
+        val = int(cell)
+        if 1 <= val <= 8:
+            return val
+        else:
+            raise ValueError("Out of range(1-8)!")
+    else:
+        raise ValueError("Invalid input")
 
+
+def inputMatrix(filename="./testcases/input.txt"):
+    """Reads and parses the input matrix from the file."""
+    lines = readFileLines(filename)
+
+    matrix = [[parseCell(cell.strip()) for cell in line.split(",")] for line in lines]
+    return matrix
+
+
+def writeMatrixToFile(matrix, filename):
+    """Writes a matrix to the specified file."""
     with open(filename, "w") as writer:
         for row in matrix:
             writer.write(
@@ -43,30 +46,37 @@ def outputMatrix(matrix, filename="./testcases/output.txt"):
             )
 
 
-def outputCNFs(KB, filename="./testcases/CNFs.txt"):
+def outputMatrix(matrix, filename="./testcases/output.txt"):
+    """Outputs the matrix to a file."""
+    writeMatrixToFile(matrix, filename)
 
+
+def outputCNFs(KB, filename="./testcases/CNFs.txt"):
+    """Outputs the CNFs to a file."""
     with open(filename, "w") as writer:
         for clause in KB:
             writer.write(" ".join([str(x) for x in clause]) + "\n")
 
 
 def printTwoMatrixes(matrix1, matrix2):
-    str_matrix = ""
+    """Returns a string representation of two matrices side by side."""
+    result = ""
+
     if matrix2 is None:
-        for r1 in matrix1:
-            str_matrix += (
-                ", ".join([str(x) if x is not None else "_" for x in r1])
+        for row in matrix1:
+            result += (
+                ", ".join([str(x) if x is not None else "_" for x in row])
                 + "  |  "
-                + ", ".join(["_" for _ in range(len(r1))])
+                + ", ".join(["_" for _ in row])
                 + "\n"
             )
-        return str_matrix
     else:
         for r1, r2 in zip(matrix1, matrix2):
-            str_matrix += (
+            result += (
                 ", ".join([str(x) if x is not None else "_" for x in r1])
                 + "  |  "
                 + ", ".join([str(x) if x is not None else "_" for x in r2])
                 + "\n"
             )
-        return str_matrix
+
+    return result
