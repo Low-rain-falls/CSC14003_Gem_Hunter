@@ -26,7 +26,7 @@ Gem Hunter/
 │   └── solvers.py              # Contains generic solver functions
 ├── main.py                     # Main program to run the algorithms (DPLL is called here)
 ├── table.py                    # Manages the grid map
-└── Utils
+└── utils
     ├── filehandle.py           # File input/output handling
     └── helper.py               # Helper functions for auxiliary tasks
 ```
@@ -110,6 +110,34 @@ Once the environment is set up and the required libraries are installed, you can
 
 ```bash
 python main.py
+```
+
+### Usage
+
+Run the program with the following command:
+
+```bash
+python main.py <algorithm> <test_case>
+```
+
+#### Parameters
+
+- `<algorithm>`: Algorithm to solve the problem. Supported values:
+  - `pysat`
+  - `backtracking`
+  - `bruteforce`
+
+- `<test_case>`: Test case file (without extension) from the `testcases/` folder. Supported values:
+  - `5x5`
+  - `11x11`
+  - `20x20`
+
+#### Example
+
+```bash
+python main.py pysat 5x5
+python main.py backtracking 11x11
+python main.py bruteforce 20x20
 ```
 
 ### Input and Output
